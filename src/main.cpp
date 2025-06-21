@@ -1,4 +1,3 @@
-#include "Indexer.h"
 #include "CommandParser.h"
 #include <iostream>
 #include <string>
