@@ -105,3 +105,6 @@ coverage/
 # Memory check files
 valgrind-out.txt
 *.vgcore
+
+# Environment variables
+.env
