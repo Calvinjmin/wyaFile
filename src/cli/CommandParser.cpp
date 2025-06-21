@@ -1,5 +1,5 @@
 #include "CommandParser.h"
-#include "Indexer.h"
+#include "../core/Indexer.h"
 #include <iostream>
 #include <sstream>
 #include <algorithm>
