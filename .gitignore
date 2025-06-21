@@ -1,0 +1,107 @@
+# Build directories
+build/
+bin/
+lib/
+obj/
+Debug/
+Release/
+x64/
+x86/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+wyaFile
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Test files
+test_*
+*_test
+*.test
+
+# Documentation build
+docs/build/
+docs/_build/
+
+# Package files
+*.tar.gz
+*.zip
+*.rar
+
+# Dependencies (if using package managers)
+vcpkg_installed/
+conan/
+node_modules/
+
+# Profiling and debugging
+*.prof
+*.gcov
+*.gcda
+*.gcno
+gmon.out
+
+# Coverage reports
+coverage/
+*.coverage
+*.gcov
+
+# Memory check files
+valgrind-out.txt
+*.vgcore
