@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <string>
 #include <cstdlib>
+#include <iomanip>
 
 namespace wyaFile {
 
@@ -14,14 +15,12 @@ CommandParser::CommandParser() {
 
 void CommandParser::initializeCommands() {
     // Initialize command descriptions
-    command_descriptions["scan"] = "Scan a directory for .txt files and display their contents";
-    command_descriptions["key"] = "Scan the 'examples' directory for relevant documents for the given keyword";
+    command_descriptions["scan"] = "Scan operations: use -key <keyword> for keyword search or -dir <path> for directory scan (requires --allow flag)";
     command_descriptions["help"] = "Show available commands and their descriptions";
     command_descriptions["exit"] = "Exit the application";
 
     // ARG COMMANDS
-    arg_commands["scan"] = &CommandParser::handleScanCommandWithArgs;
-    arg_commands["key"] = &CommandParser::handleKeyCommandWithArgs;
+    arg_commands["scan"] = &CommandParser::handleCommandWithArgs;
 
     // NO ARG COMMANDS
     no_arg_commands["help"] = &CommandParser::handleHelpCommand;
@@ -58,20 +57,45 @@ std::string CommandParser::handleScanCommand(const std::string& directory_path) 
     std::map<std::string, std::string> file_contents = indexer.scanDirectory(directory_path);
     
     if (file_contents.empty()) {
-        return "No .txt files found or could not access directory: " + directory_path;
+        return "❌ No .txt files found or could not access directory: " + directory_path;
     }
     
     std::stringstream result;
-    result << "\n=== Directory Scan Results ===\n";
-    result << "Found " << file_contents.size() << " .txt file(s) in: " << directory_path << "\n\n";
+    result << "\n";
+    result << "╔══════════════════════════════════════════════════════════════════════════════╗\n";
+    result << "║                           DIRECTORY SCAN RESULTS                             ║\n";
+    result << "╚══════════════════════════════════════════════════════════════════════════════╝\n\n";
+    result << "📁 Directory: " << directory_path << "\n";
+    result << "📊 Found " << file_contents.size() << " .txt file(s)\n\n";
     
     // Display contents of each file
+    size_t file_count = 0;
     for (const auto& [filepath, content] : file_contents) {
-        result << "--- File: " << filepath << " ---\n";
-        result << content << std::endl;
-        result << "--- End of File ---\n\n";
+        file_count++;
+        
+        result << "┌─ File " << file_count << " of " << file_contents.size() << " ──────────────────────────────────────────────┐\n";
+        result << "📄 " << filepath << "\n";
+        result << "└─────────────────────────────────────────────────────────────────────────────┘\n\n";
+        
+        // Show file content with line numbers
+        std::stringstream content_stream(content);
+        std::string line;
+        int line_number = 1;
+        
+        result << "📝 File contents:\n";
+        result << "┌─────────────────────────────────────────────────────────────────────────────┐\n";
+        
+        while (std::getline(content_stream, line)) {
+            result << "│ " << std::setw(3) << std::setfill(' ') << line_number << " │ " << line << "\n";
+            line_number++;
+        }
+        
+        result << "└─────────────────────────────────────────────────────────────────────────────┘\n\n";
     }
-    result << "=== End of Directory Scan ===\n";
+    
+    result << "╔══════════════════════════════════════════════════════════════════════════════╗\n";
+    result << "║                              END OF SCAN RESULTS                             ║\n";
+    result << "╚══════════════════════════════════════════════════════════════════════════════╝\n";
     
     return result.str();
 }
@@ -90,8 +114,12 @@ std::string CommandParser::handleKeyCommand(const std::string& keyword) {
     }
     
     std::stringstream result;
-    result << "\n=== Keyword Search Results ===\n";
-    result << "Searching for keyword: '" << keyword << "'\n\n";
+    result << "\n";
+    result << "+" << std::string(78, '=') << "+\n";
+    result << "|                           KEYWORD SEARCH RESULTS                             |\n";
+    result << "+" << std::string(78, '=') << "+\n\n";
+    result << "Searching for keyword: \"" << keyword << "\"\n";
+    result << "Search directory: " << examples_dir << "\n\n";
     
     std::vector<std::string> matching_files;
     
@@ -110,35 +138,22 @@ std::string CommandParser::handleKeyCommand(const std::string& keyword) {
     }
     
     if (matching_files.empty()) {
-        result << "No files found containing the keyword '" << keyword << "'.\n";
+        result << "No files found containing the keyword \"" << keyword << "\"\n\n";
     } else {
-        result << "Found " << matching_files.size() << " file(s) containing '" << keyword << "':\n\n";
+        result << "Found " << matching_files.size() << " file(s) containing \"" << keyword << "\":\n\n";
         
-        for (const auto& filepath : matching_files) {
-            result << "  - " << filepath << "\n";
-            
-            // Show the relevant content with keyword highlighted
-            std::string content = file_contents[filepath];
-            std::string lower_content = content;
-            std::string lower_keyword = keyword;
-            std::transform(lower_content.begin(), lower_content.end(), lower_content.begin(), ::tolower);
-            std::transform(lower_keyword.begin(), lower_keyword.end(), lower_keyword.begin(), ::tolower);
-            
-            // Find the position of the keyword
-            size_t pos = lower_content.find(lower_keyword);
-            if (pos != std::string::npos) {
-                // Show context around the keyword (up to 100 characters)
-                size_t start = (pos > 50) ? pos - 50 : 0;
-                size_t end = std::min(pos + keyword.length() + 50, content.length());
-                std::string context = content.substr(start, end - start);
-                
-                result << "    Context: ..." << context << "...\n";
-            }
-            result << "\n";
+        // Display matching files in a clean list format
+        for (size_t i = 0; i < matching_files.size(); ++i) {
+            result << "  " << (i + 1) << ". " << matching_files[i] << "\n";
         }
+        
+        result << "\n";
     }
     
-    result << "=== End of Search Results ===\n";
+    result << "+" << std::string(78, '=') << "+\n";
+    result << "|                              END OF SEARCH RESULTS                           |\n";
+    result << "+" << std::string(78, '=') << "+\n";
+    
     return result.str();
 }
 
@@ -151,10 +166,14 @@ std::string CommandParser::handleHelpCommand() {
         help << "  " << command << " - " << description << "\n";
     }
     
-    help << "\nExamples:\n";
-    help << "  scan /path/to/directory  - Scan a directory for .txt files\n";
-    help << "  key <keyword> - Scan the examples directory for <keyword> input\n";
-    help << "  exit                     - Exit the application\n";
+    help << "\nSecurity Notice:\n";
+    help << "  Directory scanning requires the --allow flag for security.\n";
+    help << "  This flag must be included with each scan operation.\n\n";
+    
+    help << "Examples:\n";
+    help << "  scan -key <keyword> --allow       - Search examples directory for keyword\n";
+    help << "  scan -dir /path/to/directory --allow - Scan directory for .txt files\n";
+    help << "  exit                                    - Exit the application\n";
     help << "===========================\n";
     
     return help.str();
@@ -198,18 +217,77 @@ std::vector<std::string> CommandParser::getAvailableCommands() const {
 }
 
 // Helper methods for function pointers
-std::string CommandParser::handleScanCommandWithArgs(const std::vector<std::string>& args) {
+std::string CommandParser::handleCommandWithArgs(const std::vector<std::string>& args) {
     if (args.size() < 2) {
-        return "Usage: scan <directory_path>\nExample: scan /path/to/directory";
+        return "Usage: scan -key <keyword> --allow OR scan -dir <path> --allow\n"
+               "Examples:\n"
+               "  scan -key basic --allow\n"
+               "  scan -dir /path/to/directory --allow";
     }
-    return handleScanCommand(args[1]);
-}
-
-std::string CommandParser::handleKeyCommandWithArgs(const std::vector<std::string>& args) {
-    if (args.size() < 2) {
-        return "Usage: key <keyword>";
+    
+    std::string command = args[0];
+    
+    if (command == "scan") {
+        // Check if --allow flag is present anywhere in the arguments
+        bool has_access_flag = false;
+        bool has_key_flag = false;
+        bool has_dir_flag = false;
+        std::string keyword;
+        std::string directory_path;
+        
+        for (size_t i = 1; i < args.size(); ++i) {
+            if (args[i] == "--allow") {
+                has_access_flag = true;
+            } else if (args[i] == "-key") {
+                has_key_flag = true;
+                // Get the keyword that follows -key
+                if (i + 1 < args.size() && args[i + 1] != "--allow" && args[i + 1] != "-dir") {
+                    keyword = args[i + 1];
+                    i++; // Skip the next argument since we've consumed it
+                }
+            } else if (args[i] == "-dir") {
+                has_dir_flag = true;
+                // Get the directory path that follows -dir
+                if (i + 1 < args.size() && args[i + 1] != "--allow" && args[i + 1] != "-key") {
+                    directory_path = args[i + 1];
+                    i++; // Skip the next argument since we've consumed it
+                }
+            }
+        }
+        
+        if (!has_access_flag) {
+            return "ERROR: Directory access requires --allow flag.\n"
+                   "Usage: scan -key <keyword> --allow OR scan -dir <path> --allow";
+        }
+        
+        if (has_key_flag && has_dir_flag) {
+            return "ERROR: Cannot use both -key and -dir flags together.\n"
+                   "Usage: scan -key <keyword> --allow OR scan -dir <path> --allow";
+        }
+        
+        if (!has_key_flag && !has_dir_flag) {
+            return "ERROR: Must specify either -key or -dir flag.\n"
+                   "Usage: scan -key <keyword> --allow OR scan -dir <path> --allow";
+        }
+        
+        if (has_key_flag) {
+            if (keyword.empty()) {
+                return "ERROR: Missing keyword after -key flag.\n"
+                       "Usage: scan -key <keyword> --allow";
+            }
+            return handleKeyCommand(keyword);
+        }
+        
+        if (has_dir_flag) {
+            if (directory_path.empty()) {
+                return "ERROR: Missing directory path after -dir flag.\n"
+                       "Usage: scan -dir <path> --allow";
+            }
+            return handleScanCommand(directory_path);
+        }
     }
-    return handleKeyCommand(args[1]);
+    
+    return handleUnknownCommand(command);
 }
 
 } // namespace wyaFile

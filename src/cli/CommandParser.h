@@ -37,8 +37,7 @@ private:
     void initializeCommands();
     
     // Helper methods for function pointers
-    std::string handleScanCommandWithArgs(const std::vector<std::string>& args);
-    std::string handleKeyCommandWithArgs(const std::vector<std::string>& args);
+    std::string handleCommandWithArgs(const std::vector<std::string>& args);
 };
 
 } // namespace wyaFile
