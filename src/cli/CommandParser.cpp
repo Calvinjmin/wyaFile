@@ -125,7 +125,7 @@ std::string CommandParser::handleScanCommand(const std::string& directory_path) 
         // Extract just the filename for cleaner display
         std::string filename = filepath.substr(filepath.find_last_of("/\\") + 1);
         
-        result << "File: " << filename << "\n";
+        result << "File: \033[32m" << filename << "\033[0m\n";
         result << std::string(40, '-') << "\n";
         
         // Show file content with line numbers
@@ -218,12 +218,9 @@ std::string CommandParser::handleKeyCommand(const std::string& keyword) {
     } else {
         result << "Found " << matching_files.size() << " matching file(s):\n\n";
         
-        // Display matching files with color highlighting
+        // Display Matching Files
         for (size_t i = 0; i < matching_files.size(); ++i) {
-            // Extract just the filename for cleaner display
             std::string filename = matching_files[i].substr(matching_files[i].find_last_of("/\\") + 1);
-            
-            // Add ANSI color codes for green text
             result << "  " << (i + 1) << ". \033[32m" << filename << "\033[0m\n";
             result << "      Path: " << matching_files[i] << "\n";
         }
