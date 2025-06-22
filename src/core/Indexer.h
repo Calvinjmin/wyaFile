@@ -10,6 +10,12 @@ namespace wyaFile {
 class Indexer {
 private:
     std::vector<std::string> supported_extensions;
+    std::vector<std::string> skip_directories;
+    
+    // Recursive scanning with guardrails
+    std::map<std::string, std::string> scanDirectoryRecursive(const std::string& directory_path, int current_depth, int max_depth) const;
+    bool shouldSkipDirectory(const std::string& dirname) const;
+    bool shouldSkipFile(const std::string& filepath) const;
 
 public:
     Indexer();

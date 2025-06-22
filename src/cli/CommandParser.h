@@ -28,7 +28,9 @@ public:
 
 private:
     // Variables
+    std::string home_dir;
     std::set<std::string> flags;
+    std::vector<std::string> directories_to_scan;
 
     // Utility methods
     std::vector<std::string> tokenizeCommand(const std::string& input);

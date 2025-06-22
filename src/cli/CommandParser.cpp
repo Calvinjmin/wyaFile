@@ -6,6 +6,7 @@
 #include <string>
 #include <cstdlib>
 #include <iomanip>
+#include <set>
 
 namespace wyaFile {
 
@@ -25,6 +26,17 @@ void CommandParser::initializeCommands() {
     // NO ARG COMMANDS
     no_arg_commands["help"] = &CommandParser::handleHelpCommand;
     no_arg_commands["exit"] = &CommandParser::handleExitCommand;
+
+    // Initialize directories to scan
+    const char* home_env = std::getenv("HOME");
+    if (home_env) {
+        home_dir = std::string(home_env);
+        directories_to_scan.push_back(home_dir + "/Documents");
+        directories_to_scan.push_back(home_dir + "/Desktop");
+    }
+    
+    // Add examples directory - prefer current directory examples
+    directories_to_scan.push_back("../examples");
 }
 
 void CommandParser::addFlag(const std::string& flag) {
@@ -99,74 +111,84 @@ std::string CommandParser::handleScanCommand(const std::string& directory_path) 
     std::map<std::string, std::string> file_contents = indexer.scanDirectory(directory_path);
     
     if (file_contents.empty()) {
-        return "❌ No .txt files found or could not access directory: " + directory_path;
+        return "No .txt files found or could not access directory: " + directory_path;
     }
     
     std::stringstream result;
     result << "\n";
-    result << "╔══════════════════════════════════════════════════════════════════════════════╗\n";
-    result << "║                           DIRECTORY SCAN RESULTS                             ║\n";
-    result << "╚══════════════════════════════════════════════════════════════════════════════╝\n\n";
-    result << "📁 Directory: " << directory_path << "\n";
-    result << "📊 Found " << file_contents.size() << " .txt file(s)\n\n";
+    result << "Directory Scan: " << directory_path << "\n";
+    result << "Found " << file_contents.size() << " file(s)\n";
+    result << std::string(60, '-') << "\n\n";
     
     // Display contents of each file
-    size_t file_count = 0;
     for (const auto& [filepath, content] : file_contents) {
-        file_count++;
+        // Extract just the filename for cleaner display
+        std::string filename = filepath.substr(filepath.find_last_of("/\\") + 1);
         
-        result << "┌─ File " << file_count << " of " << file_contents.size() << " ──────────────────────────────────────────────┐\n";
-        result << "📄 " << filepath << "\n";
-        result << "└─────────────────────────────────────────────────────────────────────────────┘\n\n";
+        result << "File: " << filename << "\n";
+        result << std::string(40, '-') << "\n";
         
         // Show file content with line numbers
         std::stringstream content_stream(content);
         std::string line;
         int line_number = 1;
         
-        result << "📝 File contents:\n";
-        result << "┌─────────────────────────────────────────────────────────────────────────────┐\n";
-        
         while (std::getline(content_stream, line)) {
-            result << "│ " << std::setw(3) << std::setfill(' ') << line_number << " │ " << line << "\n";
+            result << std::setw(3) << std::setfill(' ') << line_number << " | " << line << "\n";
             line_number++;
         }
         
-        result << "└─────────────────────────────────────────────────────────────────────────────┘\n\n";
+        result << "\n";
     }
     
-    result << "╔══════════════════════════════════════════════════════════════════════════════╗\n";
-    result << "║                              END OF SCAN RESULTS                             ║\n";
-    result << "╚══════════════════════════════════════════════════════════════════════════════╝\n";
+    result << "Scan complete\n";
     
     return result.str();
 }
 
-std::string CommandParser::handleKeyCommand(const std::string& keyword) {
-    // Get examples directory from environment variable or use default
-    const char* env_examples_dir = std::getenv("EXAMPLES_DIR");
-    std::string examples_dir = env_examples_dir ? env_examples_dir : "../examples";
-    
-    // Scan the examples directory for files
+std::string CommandParser::handleKeyCommand(const std::string& keyword) {    
+    // Scan multiple directories for files
     Indexer indexer;
-    std::map<std::string, std::string> file_contents = indexer.scanDirectory(examples_dir);
+    std::map<std::string, std::string> all_file_contents;
+    std::vector<std::string> scanned_directories;
     
-    if (file_contents.empty()) {
-        return "No files found in the examples directory.";
+    // Loop through all directories to scan
+    for (const auto& directory : directories_to_scan) {
+        std::map<std::string, std::string> dir_contents = indexer.scanDirectory(directory);
+        
+        // Merge results from this directory
+        all_file_contents.insert(dir_contents.begin(), dir_contents.end());
+        
+        // Keep track of which directories were successfully scanned
+        if (!dir_contents.empty()) {
+            scanned_directories.push_back(directory);
+        }
+    }
+    
+    if (all_file_contents.empty()) {
+        return "No files found in any of the search directories.";
     }
     
     std::stringstream result;
     result << "\n";
-    result << "+" << std::string(78, '=') << "+\n";
-    result << "|                           KEYWORD SEARCH RESULTS                             |\n";
-    result << "+" << std::string(78, '=') << "+\n\n";
-    result << "Searching for keyword: \"" << keyword << "\"\n";
-    result << "Search directory: " << examples_dir << "\n\n";
+    result << "Keyword Search Results\n";
+    result << std::string(50, '=') << "\n\n";
+    result << "Searching for: \"" << keyword << "\"\n";
+    result << "Directories: ";
+    
+    // List all scanned directories
+    for (size_t i = 0; i < scanned_directories.size(); ++i) {
+        if (i > 0) result << ", ";
+        result << scanned_directories[i];
+    }
+    result << "\n\n";
     
     std::vector<std::string> matching_files;
+    std::set<std::string> seen_filenames;
+    std::set<std::string> seen_contents;
     
-    // Search through each file for the keyword
-    for (const auto& [filepath, content] : file_contents) {
+    // Search through each file for the keyword and deduplicate
+    for (const auto& [filepath, content] : all_file_contents) {
         // Convert both content and keyword to lowercase for case-insensitive search
         std::string lower_content = content;
         std::string lower_keyword = keyword;
@@ -175,26 +197,41 @@ std::string CommandParser::handleKeyCommand(const std::string& keyword) {
         
         // Check if keyword is found in the content
         if (lower_content.find(lower_keyword) != std::string::npos) {
+            // Extract filename for deduplication
+            std::string filename = filepath.substr(filepath.find_last_of("/\\") + 1);
+            
+            // Skip if we've already seen this filename or content
+            if (seen_filenames.find(filename) != seen_filenames.end() || 
+                seen_contents.find(content) != seen_contents.end()) {
+                continue;
+            }
+            
+            // Add to deduplication sets
+            seen_filenames.insert(filename);
+            seen_contents.insert(content);
             matching_files.push_back(filepath);
         }
     }
     
     if (matching_files.empty()) {
-        result << "No files found containing the keyword \"" << keyword << "\"\n\n";
+        result << "No files found containing \"" << keyword << "\"\n\n";
     } else {
-        result << "Found " << matching_files.size() << " file(s) containing \"" << keyword << "\":\n\n";
+        result << "Found " << matching_files.size() << " matching file(s):\n\n";
         
-        // Display matching files in a clean list format
+        // Display matching files with color highlighting
         for (size_t i = 0; i < matching_files.size(); ++i) {
-            result << "  " << (i + 1) << ". " << matching_files[i] << "\n";
+            // Extract just the filename for cleaner display
+            std::string filename = matching_files[i].substr(matching_files[i].find_last_of("/\\") + 1);
+            
+            // Add ANSI color codes for green text
+            result << "  " << (i + 1) << ". \033[32m" << filename << "\033[0m\n";
+            result << "      Path: " << matching_files[i] << "\n";
         }
         
         result << "\n";
     }
     
-    result << "+" << std::string(78, '=') << "+\n";
-    result << "|                              END OF SEARCH RESULTS                           |\n";
-    result << "+" << std::string(78, '=') << "+\n";
+    result << "Search complete\n";
     
     return result.str();
 }
