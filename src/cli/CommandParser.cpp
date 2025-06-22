@@ -34,8 +34,6 @@ void CommandParser::initializeCommands() {
         directories_to_scan.push_back(home_dir + "/Documents");
         directories_to_scan.push_back(home_dir + "/Desktop");
     }
-    
-    // Add examples directory - prefer current directory examples
     directories_to_scan.push_back("../examples");
 }
 

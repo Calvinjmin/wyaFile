@@ -4,18 +4,17 @@
 
 **wyaFile** empowers you to quickly explore and analyze your files. Imagine grep, but better.
 
-## How to use the Tool
-
-![wyaFile Demo](static/scan%20examples.gif)
-
-### Available Commands
+## Available Commands
 
 - `scan -key <keyword> --allow` - Search for files containing a keyword
 - `scan -dir <path> --allow` - Scan a directory for .txt files
 - `help` - Show available commands
-- `exit` - Exit the application
 
 **Note:** The `--allow` flag is required for security when accessing directories.
+
+## Video Demo 
+
+![wyaFile Demo](static/scan%20examples.gif)
 
 ## Roadmap & Future Vision
 
