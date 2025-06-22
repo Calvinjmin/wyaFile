@@ -27,6 +27,31 @@ void CommandParser::initializeCommands() {
     no_arg_commands["exit"] = &CommandParser::handleExitCommand;
 }
 
+void CommandParser::addFlag(const std::string& flag) {
+    flags.insert(flag);
+}
+
+bool CommandParser::hasFlag(const std::string& flag) {
+    return flags.find(flag) != flags.end();
+}
+
+void CommandParser::clearFlags() {
+    flags.clear();
+}
+
+std::string CommandParser::getFlagValue(const std::string& flag, const std::vector<std::string>& args) {
+    for (size_t i = 0; i < args.size(); ++i) {
+        if (args[i] == flag && i + 1 < args.size()) {
+            // Check if the next argument is not another flag
+            std::string next_arg = args[i + 1];
+            if (next_arg[0] != '-' && next_arg[0] != '/') {
+                return next_arg;
+            }
+        }
+    }
+    return "";
+}
+
 std::string CommandParser::parseCommand(const std::string& input) {
     std::vector<std::string> tokens = tokenizeCommand(input);
 
@@ -34,7 +59,24 @@ std::string CommandParser::parseCommand(const std::string& input) {
         return "Please enter a command. Type 'help' for available commands.";
     }
 
-    std::string command = tokens[0];
+    // Clear any previous flags
+    clearFlags();
+    
+    // Extract flags from tokens (anything starting with - or --)
+    std::vector<std::string> command_tokens;
+    for (const auto& token : tokens) {
+        if (token[0] == '-') {
+            addFlag(token);
+        } else {
+            command_tokens.push_back(token);
+        }
+    }
+
+    if (command_tokens.empty()) {
+        return "Please enter a command. Type 'help' for available commands.";
+    }
+
+    std::string command = command_tokens[0];
     std::transform(command.begin(), command.end(), command.begin(), ::tolower);
 
     // Check arg commands first
@@ -228,37 +270,15 @@ std::string CommandParser::handleCommandWithArgs(const std::vector<std::string>&
     std::string command = args[0];
     
     if (command == "scan") {
-        // Check if --allow flag is present anywhere in the arguments
-        bool has_access_flag = false;
-        bool has_key_flag = false;
-        bool has_dir_flag = false;
-        std::string keyword;
-        std::string directory_path;
-        
-        for (size_t i = 1; i < args.size(); ++i) {
-            if (args[i] == "--allow") {
-                has_access_flag = true;
-            } else if (args[i] == "-key") {
-                has_key_flag = true;
-                // Get the keyword that follows -key
-                if (i + 1 < args.size() && args[i + 1] != "--allow" && args[i + 1] != "-dir") {
-                    keyword = args[i + 1];
-                    i++; // Skip the next argument since we've consumed it
-                }
-            } else if (args[i] == "-dir") {
-                has_dir_flag = true;
-                // Get the directory path that follows -dir
-                if (i + 1 < args.size() && args[i + 1] != "--allow" && args[i + 1] != "-key") {
-                    directory_path = args[i + 1];
-                    i++; // Skip the next argument since we've consumed it
-                }
-            }
-        }
-        
-        if (!has_access_flag) {
+        // Check if --allow flag is present using the flag system
+        if (!hasFlag("--allow")) {
             return "ERROR: Directory access requires --allow flag.\n"
                    "Usage: scan -key <keyword> --allow OR scan -dir <path> --allow";
         }
+        
+        // Check for -key and -dir flags
+        bool has_key_flag = hasFlag("-key");
+        bool has_dir_flag = hasFlag("-dir");
         
         if (has_key_flag && has_dir_flag) {
             return "ERROR: Cannot use both -key and -dir flags together.\n"
@@ -271,6 +291,7 @@ std::string CommandParser::handleCommandWithArgs(const std::vector<std::string>&
         }
         
         if (has_key_flag) {
+            std::string keyword = getFlagValue("-key", args);
             if (keyword.empty()) {
                 return "ERROR: Missing keyword after -key flag.\n"
                        "Usage: scan -key <keyword> --allow";
@@ -279,6 +300,7 @@ std::string CommandParser::handleCommandWithArgs(const std::vector<std::string>&
         }
         
         if (has_dir_flag) {
+            std::string directory_path = getFlagValue("-dir", args);
             if (directory_path.empty()) {
                 return "ERROR: Missing directory path after -dir flag.\n"
                        "Usage: scan -dir <path> --allow";

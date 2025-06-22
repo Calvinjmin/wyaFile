@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 
 namespace wyaFile {
 
@@ -26,9 +27,16 @@ public:
     std::vector<std::string> getAvailableCommands() const;
 
 private:
+    // Variables
+    std::set<std::string> flags;
+
     // Utility methods
     std::vector<std::string> tokenizeCommand(const std::string& input);
     bool isValidCommand(const std::string& command);
+    void addFlag(const std::string& flag);
+    bool hasFlag(const std::string& flag);
+    void clearFlags();
+    std::string getFlagValue(const std::string& flag, const std::vector<std::string>& args);
 
     // Command Maps
     std::map<std::string, std::string> command_descriptions;
