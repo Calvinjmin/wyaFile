@@ -118,7 +118,7 @@ std::string CommandParser::parseCommand(const std::string& input) {
 std::string CommandParser::handleScanCommand(const std::string& directory_path) {
     // Method Variables
     Indexer indexer;
-    std::map<std::string, std::string> file_contents = indexer.scanDirectory(directory_path);
+    FileContents file_contents = indexer.scanDirectory(directory_path);
     
     if (file_contents.empty()) {
         return "No .txt files found or could not access directory: " + directory_path;
@@ -159,9 +159,8 @@ std::string CommandParser::handleScanCommand(const std::string& directory_path) 
 std::string CommandParser::handleKeyCommand(const std::string& keyword) {    
     // Scan multiple directories for files
     Indexer indexer;
-    typedef std::pair<std::string, std::map<std::string, std::string> > DirectoryResult;
     std::vector<std::future<DirectoryResult> > futures;
-    std::map<std::string, std::string> all_file_contents_threaded;
+    FileContents all_file_contents_threaded;
     std::vector<std::string> scanned_directories_threaded;
     std::mutex mtx;
 
@@ -169,7 +168,7 @@ std::string CommandParser::handleKeyCommand(const std::string& keyword) {
     for (const auto& directory : directories_to_scan) {
         futures.push_back(std::async(std::launch::async, [directory]() {
             Indexer indexer; 
-            std::map<std::string, std::string> contents = indexer.scanDirectory(directory);
+            FileContents contents = indexer.scanDirectory(directory);
             return std::make_pair(directory, contents);
         }));
     }
@@ -178,7 +177,7 @@ std::string CommandParser::handleKeyCommand(const std::string& keyword) {
     for (auto& future : futures) {
         auto result = future.get(); 
         std::string directory = result.first;
-        std::map<std::string, std::string> dir_contents = result.second;
+        FileContents dir_contents = result.second;
 
         std::lock_guard<std::mutex> lock(mtx);
         all_file_contents_threaded.insert(dir_contents.begin(), dir_contents.end());

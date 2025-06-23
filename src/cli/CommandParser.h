@@ -1,6 +1,7 @@
 #ifndef WYAFILE_COMMANDPARSER_H
 #define WYAFILE_COMMANDPARSER_H
 
+#include "../common/Types.h"
 #include <string>
 #include <vector>
 #include <map>
@@ -30,25 +31,25 @@ public:
     private:
     // Variables
     std::string home_dir;
-    std::set<std::string> flags;
+    CommandFlags flags;
     std::vector<std::string> directories_to_scan;
 
     // Utility methods
-    std::vector<std::string> tokenizeCommand(const std::string& input);
+    CommandArgs tokenizeCommand(const std::string& input);
     bool isValidCommand(const std::string& command);
     void addFlag(const std::string& flag);
     bool hasFlag(const std::string& flag);
     void clearFlags();
-    std::string getFlagValue(const std::string& flag, const std::vector<std::string>& args);
+    std::string getFlagValue(const std::string& flag, const CommandArgs& args);
 
     // Command Maps
-    std::map<std::string, std::string> command_descriptions;
-    std::map<std::string, std::string (CommandParser::*)(const std::vector<std::string>&)> arg_commands;
+    CommandDescriptions command_descriptions;
+    std::map<std::string, std::string (CommandParser::*)(const CommandArgs&)> arg_commands;
     std::map<std::string, std::string (CommandParser::*)()> no_arg_commands;
     void initializeCommands();
     
     // Helper methods for function pointers
-    std::string handleCommandWithArgs(const std::vector<std::string>& args);
+    std::string handleCommandWithArgs(const CommandArgs& args);
 };
 
 } // namespace wyaFile
