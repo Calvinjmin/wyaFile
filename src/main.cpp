@@ -1,6 +1,5 @@
 #include "cli/CommandParser.h"
 #include <iostream>
-#include <string>
 
 int main() {
     wyaFile::CommandParser commandParser;

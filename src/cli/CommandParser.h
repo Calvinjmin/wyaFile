@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <mutex>
 
 namespace wyaFile {
 
@@ -26,7 +27,7 @@ public:
     // Get available commands
     std::vector<std::string> getAvailableCommands() const;
 
-private:
+    private:
     // Variables
     std::string home_dir;
     std::set<std::string> flags;
