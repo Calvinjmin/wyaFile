@@ -1,5 +1,0 @@
-Hello, this is a basic.txt file.
-Included Keywords:
-Greetings.
-CONFIDENTIAL
-TOP SECRET
