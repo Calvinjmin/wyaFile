@@ -1,33 +1,22 @@
 #include "cli/CommandParser.h"
 #include <iostream>
 
-int main() {
+int main(int argc, char* argv[]) {
     wyaFile::CommandParser commandParser;
 
-    std::cout << "Welcome to wyaFile Directory Scanner.\n";
-    std::cout << "Type 'help' for available commands or 'exit' to quit.\n\n";
-    
-    std::cout << "SECURITY NOTICE: Any scanning operations require the --allow flag.\n";
-    std::cout << "Examples: scan -key basic --allow OR scan -dir /path --allow\n\n";
-
-    std::string user_input;
-    while (true) {
-        std::cout << "wyaFile> ";
-        std::getline(std::cin, user_input);
-
-        if (user_input.empty()) {
-            continue;
-        }
-
-        std::string result = commandParser.parseCommand(user_input);
-        
-        if (result == "EXIT_COMMAND") {
-            std::cout << "Exiting wyaFile. Goodbye!\n";
-            break;
-        } else {
-            std::cout << result << std::endl;
-        }
+    // If no arguments provided, show help
+    if (argc == 1) {
+        std::cout << commandParser.handleHelpCommand() << std::endl;
+        return 0;
     }
 
-    return 0;
+    // Combine all arguments into a single command string
+    std::string command;
+    for (int i = 1; i < argc; ++i) {
+        if (i > 1) command += " ";
+        command += argv[i];
+    }
+
+    // Parse and execute the command
+    std::string result = commandParser.parseCommand(command);
 }

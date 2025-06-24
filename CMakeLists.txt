@@ -31,28 +31,28 @@ endfunction()
 # Discover source and header files
 discover_sources(src SOURCES HEADERS)
 
-# Create executable
-add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
+# Create executable with name "wya"
+add_executable(wya ${SOURCES} ${HEADERS})
 
 # Set include directories
-target_include_directories(${PROJECT_NAME} PRIVATE src)
+target_include_directories(wya PRIVATE src)
 
 # Set compiler flags for better warnings and optimization
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+target_compile_features(wya PRIVATE cxx_std_17)
 
 if(MSVC)
-    target_compile_options(${PROJECT_NAME} PRIVATE /W4)
+    target_compile_options(wya PRIVATE /W4)
 else()
-    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -O2)
+    target_compile_options(wya PRIVATE -Wall -Wextra -O2)
 endif()
 
 # Optional: Add installation rules
-install(TARGETS ${PROJECT_NAME}
+install(TARGETS wya
     RUNTIME DESTINATION bin
 )
 
 # Optional: Print some information
-message(STATUS "Building ${PROJECT_NAME} version ${PROJECT_VERSION}")
+message(STATUS "Building wya version ${PROJECT_VERSION}")
 message(STATUS "C++ standard: ${CMAKE_CXX_STANDARD}")
 message(STATUS "Source files: ${SOURCES}")
 message(STATUS "Header files: ${HEADERS}")

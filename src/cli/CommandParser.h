@@ -22,7 +22,6 @@ public:
     std::string handleScanCommand(const std::string& directory_path);
     std::string handleKeyCommand(const std::string& keyword);
     std::string handleHelpCommand();
-    std::string handleExitCommand();
     std::string handleUnknownCommand(const std::string& command);
     
     // Get available commands

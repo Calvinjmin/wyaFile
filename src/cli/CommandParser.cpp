@@ -29,14 +29,12 @@ void CommandParser::initializeCommands() {
     // Initialize command descriptions
     command_descriptions["scan"] = "Scan operations: use -key <keyword> for keyword search or -dir <path> for directory scan (requires --allow flag)";
     command_descriptions["help"] = "Show available commands and their descriptions";
-    command_descriptions["exit"] = "Exit the application";
 
     // ARG COMMANDS
     arg_commands["scan"] = &CommandParser::handleCommandWithArgs;
 
     // NO ARG COMMANDS
     no_arg_commands["help"] = &CommandParser::handleHelpCommand;
-    no_arg_commands["exit"] = &CommandParser::handleExitCommand;
 
     // Initialize directories to scan
     const char* home_env = std::getenv("HOME");
@@ -301,7 +299,7 @@ std::string CommandParser::handleKeyCommand(const std::string& keyword) {
 std::string CommandParser::handleHelpCommand() {
     std::stringstream help;
     help << "\n=== wyaFile Command Help ===\n";
-    help << "Available commands:\n\n";
+    help << "Available commands:\n";
     
     for (const auto& [command, description] : command_descriptions) {
         help << "  " << command << " - " << description << "\n";
@@ -314,14 +312,9 @@ std::string CommandParser::handleHelpCommand() {
     help << "Examples:\n";
     help << "  scan -key <keyword> --allow       - Search examples directory for keyword\n";
     help << "  scan -dir /path/to/directory --allow - Scan directory for .txt files\n";
-    help << "  exit                                    - Exit the application\n";
     help << "===========================\n";
     
     return help.str();
-}
-
-std::string CommandParser::handleExitCommand() {
-    return "EXIT_COMMAND";
 }
 
 std::string CommandParser::handleUnknownCommand(const std::string& command) {
