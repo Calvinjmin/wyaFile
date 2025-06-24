@@ -166,7 +166,7 @@ std::string CommandParser::handleKeyCommand(const std::string& keyword) {
 
     // Parallelize the scanning of directories
     for (const auto& directory : directories_to_scan) {
-        futures.push_back(std::async(std::launch::async, [directory]() {
+        futures.push_back(std::async(std::launch::async, [directory]() -> DirectoryResult {
             Indexer indexer; 
             FileContents contents = indexer.scanDirectory(directory);
             return std::make_pair(directory, contents);
@@ -232,7 +232,7 @@ std::string CommandParser::handleKeyCommand(const std::string& keyword) {
         
         // Launch search thread for this chunk
         search_futures.push_back(std::async(std::launch::async, 
-            [chunk_start, chunk_end, &lower_keyword]() {
+            [chunk_start, chunk_end, &lower_keyword]() -> std::vector<std::string> {
                 std::vector<std::string> chunk_matches;
                 
                 for (auto file_it = chunk_start; file_it != chunk_end; ++file_it) {
