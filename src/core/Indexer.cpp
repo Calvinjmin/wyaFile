@@ -1,15 +1,24 @@
+// Local headers
 #include "Indexer.h"
+
+// Standard library headers
 #include <fstream>
 #include <sstream>
-#include <cctype>
-#include <filesystem>
 #include <iostream>
 #include <algorithm>
+#include <cctype>
+#include <filesystem>
 
 namespace wyaFile {
 
 Indexer::Indexer() {
-    supported_extensions = {".txt", ".csv"};
+    supported_extensions = {
+        ".txt", ".csv", ".md", ".json", ".xml", ".yaml", ".yml",
+        ".html", ".css", ".js", ".ts", ".tsx", ".jsx", ".py", ".cpp", ".h", ".hpp",
+        ".java", ".c", ".php", ".rb", ".go", ".rs", ".swift", ".kt", ".scala",
+        ".sh", ".bash", ".zsh", ".fish", ".ps1", ".bat", ".cmd",
+        ".sql", ".r", ".m", ".mat", ".ipynb", ".tex", ".rst", ".adoc"
+    };
     
     // Directories to skip for performance and relevance
     skip_directories = {
@@ -66,12 +75,16 @@ std::vector<std::string> Indexer::tokenize(const std::string& text) const {
 }
 
 bool Indexer::isSupportedFile(const std::string& filepath) const {
-    // Check if the file has a supported extension
-    if ( filepath.length() < 4 ) {
-        return false;
+    // Find the last dot in the filename
+    size_t last_dot = filepath.find_last_of('.');
+    if (last_dot == std::string::npos) {
+        return false; // No extension found
     }
-
-    const std::string extension = filepath.substr(filepath.length() - 4 );
+    
+    // Extract the extension (including the dot)
+    std::string extension = filepath.substr(last_dot);
+    
+    // Check if the extension is in our supported list
     return std::find(supported_extensions.begin(), supported_extensions.end(), extension) != supported_extensions.end();
 }
 
